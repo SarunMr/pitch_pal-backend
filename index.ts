@@ -1,16 +1,20 @@
 import express, { Request, Response } from "express";
+import dotenv from "dotenv";
+import connectDB from "./src/database/mongodb";
+dotenv.config();
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 5000;
 
 // Middleware to parse JSON
 app.use(express.json());
 
-// A simple GET route
-app.get("/", (req: Request, res: Response) => {
-  res.send("Hello! World");
-});
+const start = async (): Promise<void> => {
+  await connectDB();
 
-app.listen(PORT, () => {
-  console.log(`⚡️ Server is running at http://localhost:${PORT}`);
-});
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+  });
+};
+
+start();
