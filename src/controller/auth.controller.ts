@@ -47,11 +47,19 @@ export class AuthController {
       const id = req.user?._id.toString();
       if (!id) return next(new HttpException(401, "Unauthorized"));
 
+      const filename = req.file?.filename;
+
       const body = UpdateUserDTO.safeParse(req.body);
       if (!body.success) {
         return next(new HttpException(400, z.prettifyError(body.error)));
       }
-      const user = await authService.updateUser(id, body.data);
+
+      const updateData = {
+        ...body.data,
+        ...(filename && { profilePicture: "/uploads/" + filename }),
+      };
+
+      const user = await authService.updateUser(id, updateData);
       ApiResponseHelper.success(res, user, "Profile updated successfully");
     } catch (error) {
       next(error);
