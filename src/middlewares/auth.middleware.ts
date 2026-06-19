@@ -4,6 +4,7 @@ import { UserMongoRepository } from "../repositories/auth.repository";
 import jwt from "jsonwebtoken";
 import { HttpException } from "../exceptions/http-exception";
 import { ApiResponseHelper } from "../utils/api-response.util";
+import { SECRET_KEY } from "../config/constant";
 
 declare global {
   namespace Express {
@@ -29,10 +30,10 @@ export const authorizeMiddleware = async (
     if (!token) {
       throw new HttpException(401, "Unauthorized: invalid token");
     }
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET as string,
-    ) as Record<string, any>;
+    const decoded = jwt.verify(token, SECRET_KEY as string) as Record<
+      string,
+      any
+    >;
     if (!decoded || !decoded.id) {
       throw new HttpException(401, "Unauthorized: unverified token");
     }
