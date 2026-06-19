@@ -3,6 +3,7 @@ import helmet from "helmet";
 import cors from "cors";
 import { HttpException } from "./exceptions/http-exception";
 import authRouter from "./routes/auth.route";
+import path from "path";
 
 const app: Application = express();
 
@@ -18,6 +19,7 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 //routes auth
 app.use("/api/auth", authRouter);
 
