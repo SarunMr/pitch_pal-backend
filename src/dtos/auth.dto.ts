@@ -1,5 +1,9 @@
 import { z } from "zod";
-import { RegisterSchema, LoginSchema } from "../types/auth.type";
+import {
+  RegisterSchema,
+  LoginSchema,
+  UpdateProfileSchema,
+} from "../types/auth.type";
 
 export const RegisterDTO = RegisterSchema.pick({
   username: true,
@@ -14,3 +18,13 @@ export const LoginDTO = LoginSchema.pick({
   password: true,
 });
 export type LoginDTO = z.infer<typeof LoginDTO>;
+
+export const UpdateUserDTO = UpdateProfileSchema.pick({
+  firstName: true,
+  lastName: true,
+  username: true,
+  profilePicture: true,
+  bio: true,
+  phone: true,
+});
+export type UpdateUserDTO = z.infer<typeof UpdateUserDTO>;
