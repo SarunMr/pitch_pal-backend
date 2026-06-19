@@ -2,7 +2,7 @@ import { UserMongoRepository } from "../repositories/auth.repository";
 import { IUser } from "../models/auth.model";
 import bcryptjs from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { LoginDTO, RegisterDTO } from "../dtos/auth.dto";
+import { LoginDTO, RegisterDTO, UpdateUserDTO } from "../dtos/auth.dto";
 import { HttpException } from "../exceptions/http-exception";
 import { SECRET_KEY } from "../config/constant";
 
@@ -52,5 +52,27 @@ export class AuthService {
     );
 
     return { user, token };
+  }
+  async updateUser(id: string, userData: UpdateUserDTO): Promise<IUser> {
+    const user = await userRepository.getUserById(id);
+    if (!user) {
+      throw new HttpException(404, "User not found");
+    }
+
+    if (userData.username) {
+      const existingUsername = await userRepository.getUserByUsername(
+        userData.username,
+      );
+      if (existingUsername && existingUsername._id.toString() !== id) {
+        throw new HttpException(409, "Username already taken");
+      }
+    }
+
+    const updated = await userRepository.update(id, userData);
+    if (!updated) {
+      throw new HttpException(400, "Failed to update user");
+    }
+
+    return updated;
   }
 }
