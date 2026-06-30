@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { AuthService } from "../services/auth.service";
-import { LoginDTO, RegisterDTO, UpdateUserDTO } from "../dtos/auth.dto";
+import { LoginDTO, RegisterDTO, UpdateUserDTO, ResetPasswordDTO } from "../dtos/auth.dto";
 import z from "zod";
 import { ApiResponseHelper } from "../utils/api-response.util";
 import { HttpException } from "../exceptions/http-exception";
@@ -71,6 +71,27 @@ export class AuthController {
       const user = req.user;
       if (!user) return next(new HttpException(401, "Unauthorized"));
       ApiResponseHelper.success(res, user, "User info retrieved");
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async resetPassword(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    try {
+      const id = req.user?._id.toString();
+      if (!id) return next(new HttpException(401, "Unauthorized"));
+
+      const body = ResetPasswordDTO.safeParse(req.body);
+      if (!body.success) {
+        return next(new HttpException(400, z.prettifyError(body.error)));
+      }
+
+      await authService.resetPassword(id, body.data);
+      ApiResponseHelper.success(res, null, "Password reset successfully");
     } catch (error) {
       next(error);
     }

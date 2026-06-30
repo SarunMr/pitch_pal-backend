@@ -15,5 +15,6 @@ authRouter.put(
   uploads.single("profilePicture"),
   authController.updateUser,
 );
+authRouter.put("/reset-password", authorizeMiddleware, authController.resetPassword);
 
 export default authRouter;
