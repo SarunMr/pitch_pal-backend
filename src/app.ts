@@ -3,13 +3,21 @@ import helmet from "helmet";
 import cors from "cors";
 import { HttpException } from "./exceptions/http-exception";
 import authRouter from "./routes/auth.route";
+import adminUserRouter from "./routes/admin-user.route";
+import path from "path";
 
 const app: Application = express();
 
 //Security Middleware
-app.use(helmet());
+// Configure helmet to allow cross-origin images (needed for frontend at localhost:3000)
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  })
+);
 const corsOptions = {
-  origin: ["*"],
+  origin: ["http://localhost:3000", "http://127.0.0.1:3000"],
+  credentials: true,
   successStatus: 200,
 };
 app.use(cors(corsOptions));
@@ -18,8 +26,12 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Serve uploads — use process.cwd() so path is always relative to project root
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 //routes auth
 app.use("/api/auth", authRouter);
+//routes admin
+app.use("/api/admin/users", adminUserRouter);
 
 // 404 handler
 app.use((_req: Request, res: Response) => {

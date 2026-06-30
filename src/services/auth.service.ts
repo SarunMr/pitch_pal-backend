@@ -2,7 +2,7 @@ import { UserMongoRepository } from "../repositories/auth.repository";
 import { IUser } from "../models/auth.model";
 import bcryptjs from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { LoginDTO, RegisterDTO } from "../dtos/auth.dto";
+import { LoginDTO, RegisterDTO, UpdateUserDTO, ResetPasswordDTO } from "../dtos/auth.dto";
 import { HttpException } from "../exceptions/http-exception";
 import { SECRET_KEY } from "../config/constant";
 
@@ -52,5 +52,48 @@ export class AuthService {
     );
 
     return { user, token };
+  }
+  async updateUser(id: string, userData: UpdateUserDTO): Promise<IUser> {
+    const user = await userRepository.getUserById(id);
+    if (!user) {
+      throw new HttpException(404, "User not found");
+    }
+
+    if (userData.username) {
+      const existingUsername = await userRepository.getUserByUsername(
+        userData.username,
+      );
+      if (existingUsername && existingUsername._id.toString() !== id) {
+        throw new HttpException(409, "Username already taken");
+      }
+    }
+
+    const updated = await userRepository.update(id, userData);
+    if (!updated) {
+      throw new HttpException(400, "Failed to update user");
+    }
+
+    return updated;
+  }
+
+  async resetPassword(id: string, passwordData: ResetPasswordDTO): Promise<void> {
+    const user = await userRepository.getUserById(id);
+    if (!user) {
+      throw new HttpException(404, "User not found");
+    }
+
+    const isPasswordValid = await bcryptjs.compare(
+      passwordData.currentPassword,
+      user.password,
+    );
+    if (!isPasswordValid) {
+      throw new HttpException(400, "Invalid current password");
+    }
+
+    const hashedPassword = await bcryptjs.hash(passwordData.newPassword, 10);
+    const updated = await userRepository.update(id, { password: hashedPassword });
+    if (!updated) {
+      throw new HttpException(400, "Failed to update password");
+    }
   }
 }

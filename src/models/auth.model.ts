@@ -4,6 +4,7 @@ import { RegisterInput } from "../types/auth.type";
 export interface IUser extends Omit<RegisterInput, "password">, Document {
   _id: mongoose.Types.ObjectId;
   password: string;
+  status: "active" | "suspended" | "banned";
   profilePicture?: string;
   firstName?: string;
   lastName?: string;
@@ -30,6 +31,11 @@ const UserMongoSchema: Schema = new Schema<IUser>(
     profilePicture: { type: String },
     bio: { type: String },
     phone: { type: String },
+    status: {
+      type: String,
+      enum: ["active", "suspended", "banned"],
+      default: "active",
+    },
 
     // googleId:    { type: String },
     // authProvider:{ type: String, enum: ["local", "google"], default: "local" },
