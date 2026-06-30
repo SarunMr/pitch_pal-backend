@@ -67,6 +67,9 @@ export const adminMiddleware = async (
   }
 };
 
+// Alias for use in admin routes (identical behaviour, single source of truth)
+export const adminOnlyMiddleware = adminMiddleware;
+
 export const entrepreneurMiddleware = async (
   req: Request,
   res: Response,

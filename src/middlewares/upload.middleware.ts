@@ -4,25 +4,31 @@ import { Request } from "express";
 import { HttpException } from "../exceptions/http-exception";
 import fs from "fs";
 import { v4 as uuidv4 } from "uuid";
+
+const ALLOWED_MIME_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+
 const storage = multer.diskStorage({
   destination: (
     req: Request,
     file: Express.Multer.File,
     cb: (error: Error | null, destination: string) => void,
   ) => {
-    const uploadPath = path.join(__dirname, "../../uploads"); // __dirname -> current dir
+    // Always resolve from project root (process.cwd()), not __dirname (src/)
+    const uploadPath = path.join(process.cwd(), "uploads");
     if (!fs.existsSync(uploadPath)) {
-      fs.mkdirSync(uploadPath); // create uploads dir if not exists
+      fs.mkdirSync(uploadPath, { recursive: true });
     }
-    cb(null, uploadPath); // save to uploads dir
+    cb(null, uploadPath);
   },
   filename: (
     req: Request,
     file: Express.Multer.File,
     cb: (error: Error | null, filename: string) => void,
   ) => {
-    const fileSuffix = uuidv4(); // unique suffix
-    cb(null, fileSuffix + "-" + file.originalname); // unique filename
+    // Sanitize original filename to remove spaces/special chars
+    const safeOriginalName = file.originalname.replace(/\s+/g, "_").replace(/[^a-zA-Z0-9._-]/g, "");
+    const ext = path.extname(safeOriginalName) || `.${file.mimetype.split("/")[1]}`;
+    cb(null, `${uuidv4()}${ext}`);
   },
 });
 
@@ -31,12 +37,13 @@ const fileFilter = (
   file: Express.Multer.File,
   cb: multer.FileFilterCallback,
 ) => {
-  if (file.mimetype === "image/jpeg" || file.mimetype === "image/png") {
-    cb(null, true); // accept file
+  if (ALLOWED_MIME_TYPES.includes(file.mimetype)) {
+    cb(null, true);
   } else {
-    cb(new HttpException(400, "Only JPEG and PNG files are allowed")); // reject file
+    cb(new HttpException(400, "Only JPEG, PNG and WebP images are allowed"));
   }
 };
+
 const upload = multer({
   storage,
   limits: {
@@ -47,12 +54,6 @@ const upload = multer({
 
 export const uploads = {
   single: (fieldName: string) => upload.single(fieldName),
-  array: (fieldName: string, maxCount: number) =>
-    upload.array(fieldName, maxCount),
-  fields: (
-    fieldsArray: {
-      name: string;
-      maxCount?: number;
-    }[],
-  ) => upload.fields(fieldsArray),
+  array: (fieldName: string, maxCount: number) => upload.array(fieldName, maxCount),
+  fields: (fieldsArray: { name: string; maxCount?: number }[]) => upload.fields(fieldsArray),
 };

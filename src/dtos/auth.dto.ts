@@ -3,6 +3,7 @@ import {
   RegisterSchema,
   LoginSchema,
   UpdateProfileSchema,
+  ResetPasswordSchema,
 } from "../types/auth.type";
 
 export const RegisterDTO = RegisterSchema.pick({
@@ -21,3 +22,6 @@ export type LoginDTO = z.infer<typeof LoginDTO>;
 
 export const UpdateUserDTO = UpdateProfileSchema.partial();
 export type UpdateUserDTO = z.infer<typeof UpdateUserDTO>;
+
+export const ResetPasswordDTO = ResetPasswordSchema;
+export type ResetPasswordDTO = z.infer<typeof ResetPasswordDTO>;
